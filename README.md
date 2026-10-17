@@ -18,8 +18,8 @@ Needs Python 3.10+ (tested on 3.13). From the project folder:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt   # 1. install
-.venv/bin/uvicorn app.main:app                                       # 2. run, then open http://127.0.0.1:8000
-.venv/bin/python scripts/create_test_accounts.py                     # 3. in a second terminal: create the test logins
+.venv/bin/uvicorn app.main:app          # 2. run, then open http://127.0.0.1:8000
+.venv/bin/python scripts/create_test_accounts.py   # 3. in a second terminal: create the test logins
 ```
 
 On start-up the server loads `data/*.csv` into SQLite (`var/frontdesk.db`, created automatically) and prints:

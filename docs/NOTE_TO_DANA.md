@@ -79,4 +79,4 @@ This is a working prototype, not something to put real visitor data behind as is
 Answer those four, then add a way to compare two periods side by side, and a weekly summary you could have emailed.
 
 Best,
-The Front Desk build
+Skanda Gonur Nagaraj
