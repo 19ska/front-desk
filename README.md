@@ -106,18 +106,6 @@ for anything else.
 
 The route guard is a courtesy. **The API's 403 is the real control.**
 
-## Tests
-
-| Suite | Command | Expect |
-|---|---|---|
-| Python (API, loader, auth, leak sweep) | `.venv/bin/python -m pytest` | all pass |
-| JavaScript (page logic) | `node --test 'tests/js/*.test.mjs'` (Node 22+) | `fail 0` |
-| Security checks with curl (app running) | `scripts/security_check.sh` | `30 passed, 0 failed` |
-| Real browser (Chrome installed) | `scripts/browser_check/serve-fresh.sh && node scripts/browser_check/run.mjs` | `52 passed, 0 failed` |
-
-The browser and security suites are described in [scripts/README.md](scripts/README.md). An independent security
-reviewer can start from [docs/SECURITY_TESTS.md](docs/SECURITY_TESTS.md) alone.
-
 ## Decisions
 
 - **What a refused person is told:** *"This email isn't on Brightline's access list. If you think it should be, ask
