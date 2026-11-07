@@ -30,6 +30,7 @@ def filters_json(f: VisitFilters) -> dict:
 def visits(request: Request, user: CurrentUser = Depends(current_user), conn: sqlite3.Connection = Depends(get_conn)):
     f = parse_filters(request.query_params, conn, PAGING)
     page, page_size = parse_page(request.query_params)
+    # fetch role-appropriate visits
     result = list_visits(conn, f, page, page_size, identities=user.can_see_identities)
     if result["total"] and page > result["total_pages"]:
         raise HTTPException(400, f"Page {page} doesn't exist. There are {result['total_pages']} pages.")

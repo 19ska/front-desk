@@ -31,6 +31,7 @@ class DataFileError(ValueError):
 def read_csv(path: Path, columns: set[str]) -> list[tuple[int, dict[str, str]]]:
     """Return (line number, row) pairs with every value stripped. Refuses malformed files."""
     # utf-8-sig drops a BOM if present; newline="" lets csv handle CRLF.
+    #Each row becomes a dictionary where the column names are keys.
     with path.open(encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         header = {h.strip() for h in reader.fieldnames or []}

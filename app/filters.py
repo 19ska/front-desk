@@ -32,14 +32,14 @@ def bad(message: str) -> HTTPException:
 def visit_types(conn: sqlite3.Connection) -> list[str]:
     return [r[0] for r in conn.execute("SELECT DISTINCT visit_type FROM visits ORDER BY visit_type")]
 
-
+#check that parameter type appears only once 
 def single(params: QueryParams, name: str) -> str | None:
     values = params.getlist(name)
     if len(values) > 1:
         raise bad(f"Give {name} only once.")
     return values[0] if values else None
 
-
+#checks and converts to python date object
 def parse_date(params: QueryParams, name: str) -> date | None:
     raw = single(params, name)
     if raw is None or raw.strip() == "":
@@ -54,27 +54,30 @@ def parse_date(params: QueryParams, name: str) -> date | None:
 
 
 def parse_filters(params: QueryParams, conn: sqlite3.Connection, extra: frozenset[str] = frozenset()) -> VisitFilters:
+    #("from", "to", "type", "page", "page_size")
     accepted = FILTERS + tuple(sorted(extra))
     for name in params.keys():
-        if name not in accepted:
+        if name not in accepted: #not accpeted parameter -> 400
             raise bad(f"Unknown filter: {name[:40]}. Use {', '.join(accepted)}.")
     date_from, date_to = parse_date(params, "from"), parse_date(params, "to")
+    #valid date range check
     if date_from and date_to and date_to < date_from:
         raise bad(f"The end date ({date_to}) is before the start date ({date_from}).")
     visit_type = (single(params, "type") or "").strip().lower() or None
+    #validated the visit type
     if visit_type is not None:
         known = visit_types(conn)
         if visit_type not in known:
             raise bad(f"Unknown visit type '{visit_type[:40]}'. Choose one of: {', '.join(known)}.")
     return VisitFilters(date_from, date_to, visit_type)
 
-
+#pagination:how many visitor records appear on each page.
 def parse_whole_number(params: QueryParams, name: str, default: int, maximum: int | None) -> int:
     raw = single(params, name)
     if raw is None:
         return default
     digits = raw.strip()
-    # Capped at 9 digits: anything longer is nonsense and would overflow SQLite's OFFSET.
+    # Capped at 9 digits: anything longer is bad and would overflow SQLite's OFFSET.
     value = int(digits) if digits.isascii() and digits.isdigit() and len(digits) <= 9 else 0
     if value < 1 or (maximum and value > maximum):
         limit = f"from 1 to {maximum}" if maximum else "from 1"

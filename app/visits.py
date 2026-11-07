@@ -18,11 +18,11 @@ VIEWER_COLUMNS = ("visit_id", "visit_date", "signed_in_at", "signed_out_at", "du
                   "visit_type", "host_team", "pre_registered")
 ADMIN_COLUMNS = VIEWER_COLUMNS + ("visitor_name", "visitor_email", "visitor_company", "host_name", "host_email")
 
-
+# restricting sensitive information at the database query level
 def columns_sql(identities: bool) -> str:
     return ", ".join(ADMIN_COLUMNS if identities else VIEWER_COLUMNS)
 
-
+#converts database rows into dictionares, eventually returned as JSON 
 def row_to_item(row: sqlite3.Row, identities: bool) -> dict:
     item = {
         "visit_id": row["visit_id"],
@@ -81,7 +81,7 @@ def clipped_range(conn: sqlite3.Connection, f: VisitFilters) -> tuple[date | Non
         return f.date_from, f.date_to
     return lo, hi
 
-
+# returns a dictionary containing all the statistics needed by your dashboard
 def compute_stats(conn: sqlite3.Connection, f: VisitFilters) -> dict:
     where, values = filters_sql(f)
     lo, hi = clipped_range(conn, f)
@@ -94,6 +94,7 @@ def compute_stats(conn: sqlite3.Connection, f: VisitFilters) -> dict:
     days_per_weekday = {w: sum(d.weekday() == w for d in operating) for w in range(7)}
 
     by_weekday_count = dict(conn.execute(f"SELECT weekday, COUNT(*) FROM visits {where} GROUP BY weekday", values).fetchall())
+    #    Average visits on each weekday
     by_weekday = [
         {
             "weekday": w,
@@ -107,7 +108,9 @@ def compute_stats(conn: sqlite3.Connection, f: VisitFilters) -> dict:
 
     first_hour, last_hour = conn.execute("SELECT MIN(hour), MAX(hour) FROM visits").fetchone()
     by_hour_count = dict(conn.execute(f"SELECT hour, COUNT(*) FROM visits {where} GROUP BY hour", values).fetchall())
+    #range of time 
     hours = range(first_hour, last_hour + 1) if first_hour is not None else range(0)
+    #    Total visits during each hour
     by_hour = [{"hour": h, "visits": by_hour_count.get(h, 0)} for h in hours]
 
     cell_count = {(w, h): n for w, h, n in conn.execute(
@@ -116,7 +119,9 @@ def compute_stats(conn: sqlite3.Connection, f: VisitFilters) -> dict:
         {
             "weekday": d["weekday"],
             "hour": h["hour"],
+            ## Total sign-ins for this specific weekday and hour across all weeks.
             "visits": cell_count.get((d["weekday"], h["hour"]), 0),
+            # Average sign-ins at this hour per operating day of that weekday.
             "avg_per_day": round(cell_count.get((d["weekday"], h["hour"]), 0) / d["operating_days"], 1),
         }
         for d in by_weekday for h in by_hour

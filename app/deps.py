@@ -22,8 +22,10 @@ def get_conn(request: Request) -> Iterator[sqlite3.Connection]:
 
 def presented_token(request: Request) -> str | None:
     """The session token from the browser's cookie, or from `Authorization: Bearer <token>` for curl."""
+    # First, check for the session token in the browser's cookie.
     if token := request.cookies.get(SESSION_COOKIE):
         return token
+    # If no cookie exists, check the Authorization header (used by curl/API clients).
     parts = request.headers.get("authorization", "").split()
     if len(parts) == 2 and parts[0].lower() == "bearer":
         return parts[1]
